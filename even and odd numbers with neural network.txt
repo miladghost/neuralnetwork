@@ -1,0 +1,80 @@
+python
+# Import numpy for array operations
+import numpy as np
+
+# Define a neural network class with one hidden layer
+class NeuralNetwork:
+
+  # Initialize the network with random weights and biases
+  def init(self, input_size, hidden_size, output_size):
+    self.input_size = input_size
+    self.hidden_size = hidden_size
+    self.output_size = output_size
+    self.W1 = np.random.randn(input_size, hidden_size) # Weight matrix from input to hidden layer
+    self.b1 = np.random.randn(hidden_size) # Bias vector for hidden layer
+    self.W2 = np.random.randn(hidden_size, output_size) # Weight matrix from hidden to output layer
+    self.b2 = np.random.randn(output_size) # Bias vector for output layer
+
+  # Define the sigmoid activation function
+  def sigmoid(self, x):
+    return 1 / (1 + np.exp(-x))
+
+  # Define the derivative of the sigmoid function
+  def sigmoid_prime(self, x):
+    return self.sigmoid(x) * (1 - self.sigmoid(x))
+
+  # Define the feedforward function
+  def feedforward(self, x):
+    self.z1 = np.dot(x, self.W1) + self.b1 # Linear combination of input and weights for hidden layer
+    self.a1 = self.sigmoid(self.z1) # Activation of hidden layer
+    self.z2 = np.dot(self.a1, self.W2) + self.b2 # Linear combination of hidden layer and weights for output layer
+    self.a2 = self.sigmoid(self.z2) # Activation of output layer
+    return self.a2
+
+  # Define the backpropagation function
+  def backprop(self, x, y, learning_rate):
+    # Compute the output error
+    output_error = y - self.feedforward(x)
+    # Compute the output delta
+    output_delta = output_error * self.sigmoid_prime(self.z2)
+    # Compute the hidden error
+    hidden_error = np.dot(output_delta, self.W2.T)
+    # Compute the hidden delta
+    hidden_delta = hidden_error * self.sigmoid_prime(self.z1)
+    # Update the weights and biases
+    self.W1 += learning_rate * np.dot(x.T, hidden_delta)
+    self.b1 += learning_rate * np.sum(hidden_delta, axis=0)
+    self.W2 += learning_rate * np.dot(self.a1.T, output_delta)
+    self.b2 += learning_rate * np.sum(output_delta, axis=0)
+
+  # Define the train function
+  def train(self, x, y, epochs, learning_rate):
+    # Loop over the number of epochs
+    for i in range(epochs):
+      # Perform backpropagation for each input-output pair
+      for j in range(len(x)):
+        self.backprop(x[j], y[j], learning_rate)
+      # Print the loss every 10 epochs
+      if (i + 1) % 10 == 0:
+        loss = np.mean(np.square(y - self.feedforward(x)))
+        print(f"Epoch {i + 1}, Loss: {loss}")
+
+# Create a neural network object with 1 input node, 4 hidden nodes and 2 output nodes
+nn = NeuralNetwork(1, 4, 2)
+
+# Define the input array of numbers from 0 to 9
+x = np.array([[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]])
+
+# Define the output array of labels for even and odd numbers
+y = np.array([[1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1]])
+
+# Train the network with 100 epochs and a learning rate of 0.01
+nn.train(x, y, 100, 0.01)
+
+# Test the network with some numbers
+test_numbers = np.array([[10], [11], [12]])
+test_labels = nn.feedforward(test_numbers)
+
+# Print the results
+for i in range(len(test_numbers)):
+  print(f"Number: {test_numbers[i]}, Label: {test_labels[i]}")
